@@ -11,6 +11,7 @@
     "min_height": 600
   },
   "scripts": {
+    "setup": "mkdir cache && mkdir dist",
     "run-windows": "/mnt/d/nwjs/nw.exe .",
     "host": "cd dist && http-server -c-1 --proxy http://localhost:8080?",
     "test": "echo \"Error: no test specified\" && exit 1",
