@@ -1,5 +1,5 @@
 import React from 'react';
-import { Media } from './Media';
+import { Media, YouTubeLinks } from './Media';
 import { baseMediaUrl } from '../constants';
 
 export function Post({ post, board, parent, replies = [], onClick }) {
@@ -12,6 +12,7 @@ export function Post({ post, board, parent, replies = [], onClick }) {
 				boxShadow: '0px 0px 5px 0px rgba(50, 50, 50, 0.75)',
 				position: 'relative',
 				cursor: onClick ? 'pointer' : 'default',
+				backgroundColor: '#2d2d2d',
 			}}
 			onClick={onClick}
 		>
@@ -158,6 +159,18 @@ export function Post({ post, board, parent, replies = [], onClick }) {
 					/>
 				</div>
 			</div>
+			{post.com && (
+				<div
+					style={{
+						fontSize: 12,
+						paddingBottom: 10,
+						marginBottom: 10,
+						borderBottom: '1px solid',
+					}}
+				>
+					<YouTubeLinks text={post.com} />
+				</div>
+			)}
 			{post.replies ? (
 				<div
 					style={{

@@ -76,10 +76,8 @@ export function BoardList() {
 	useEffect(() => {
 		const boards = boardsColl.findOne({});
 		if (!boards) {
-			console.log('fetching boards');
 			fetch();
 		} else {
-			console.log('found boards');
 			setBoardList(boards.boards);
 		}
 	}, []);

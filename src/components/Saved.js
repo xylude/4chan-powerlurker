@@ -30,7 +30,6 @@ export function Saved() {
 						type: 'post',
 						threadNo: thread.threadNo,
 					});
-					console.log('found post', firstPost);
 					return (
 						<Post
 							board={firstPost.board}

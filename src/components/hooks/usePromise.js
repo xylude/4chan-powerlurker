@@ -20,7 +20,6 @@ export function usePromise(fn, deps, debug = '') {
 				.finally(() => {
 					setLoading(false);
 					window.localStorage.setItem('lastRequest', Date.now().toString());
-					console.log('usePromise completed.', debug);
 				});
 		}, throttleTime);
 	}, deps);

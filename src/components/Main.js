@@ -10,10 +10,12 @@ export default function () {
 
 	useEffect(() => {
 		function handleHashChange() {
+			// console.log('hashchange', window.location.hash);
 			if (window.location.hash) {
-				console.log('hashchange', window.location.hash);
 				if (window.location.hash.startsWith('#link')) {
-					nw.Shell.openExternal(window.location.hash.replace('#link:', ''));
+					//nw.Shell.openExternal
+					window.open(window.location.hash.replace('#link:', ''));
+					window.location.hash = '';
 				}
 			}
 		}

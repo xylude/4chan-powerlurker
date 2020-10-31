@@ -1,29 +1,89 @@
 import React, { useState, useEffect, useContext } from 'react';
-import request from 'request';
 import { basename, extname } from 'path';
 import fs from 'fs';
 import { Modal } from './Modal';
 import { usePromise } from './hooks/usePromise';
 import { StorageContext } from './StorageProvider';
+import https from 'https';
 
 export function saveFileToCache(location) {
-	return new Promise((resolve) => {
+	return new Promise((resolve, reject) => {
 		fs.stat(`./cache/images/${basename(location)}`, (err, stat) => {
 			if (err) {
-				// fetch and save locally:
-				const fStream = fs.createWriteStream(
-					`./cache/images/${basename(location)}`
-				);
-				request(location)
-					.pipe(fStream)
-					.on('finish', () => {
-						resolve();
+				try {
+					console.log('fetching from ', location);
+					// fetch and save locally:
+					const fStream = fs.createWriteStream(
+						`./cache/images/${basename(location)}`
+					);
+					https.get(location, (res) => {
+						res.pipe(fStream).on('finish', () => {
+							resolve();
+						});
 					});
+				} catch (e) {
+					reject(e);
+				}
 			} else {
 				resolve();
 			}
 		});
 	});
+}
+
+function ToggleEmbed({ link }) {
+	const [viewing, setViewing] = useState(false);
+	const style = {
+		padding: '10px 5px',
+		cursor: 'pointer',
+		textDecoration: 'underline',
+	};
+
+	return (
+		<div>
+			{viewing ? (
+				<>
+					<div style={style} onClick={() => setViewing(false)}>
+						[Close Embed ({link})]
+					</div>
+					<iframe
+						width="560"
+						height="315"
+						src={link}
+						frameBorder="0"
+						allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+						allowFullScreen
+					></iframe>
+				</>
+			) : (
+				<div style={style} onClick={() => setViewing(true)}>
+					[View Embed ({link})]
+				</div>
+			)}
+		</div>
+	);
+}
+
+export function YouTubeLinks({ text }) {
+	const links = text
+		.replace(/(<wbr>|<\/wbr>)/g, '')
+		.match(/https?:\/\/(www\.)?(youtube\.com|youtu\.be)(.+?)(\s|<|$)/gi);
+
+	return links
+		? links
+				.map((link) => link.replace('<', '').trim())
+				.map((link) => {
+					const url = new URL(link);
+					const search = new URLSearchParams(url.search);
+
+					const vid = search.has('v')
+						? search.get('v')
+						: url.pathname.split('/').filter((p) => p)[0];
+
+					return `https://www.youtube.com/embed/${vid}`;
+				})
+				.map((link, i) => <ToggleEmbed key={i} link={link} />)
+		: null;
 }
 
 function getFileUrl(location) {
@@ -32,6 +92,7 @@ function getFileUrl(location) {
 			if (err) {
 				resolve(location);
 			} else {
+				console.log('data for', basename(location), stat);
 				resolve(`../cache/images/${basename(location)}`);
 			}
 		});

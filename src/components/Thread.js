@@ -49,7 +49,6 @@ export function Thread({ board, threadNo, onExit }) {
 	useEffect(() => {
 		function handleHashChange() {
 			if (window.location.hash) {
-				console.log('hashchange', window.location.hash);
 				if (window.location.hash.startsWith('#p')) {
 					setViewingPost(parseInt(window.location.hash.replace('#p', ''), 10));
 				}
@@ -79,6 +78,8 @@ export function Thread({ board, threadNo, onExit }) {
 					threadNo,
 					post,
 				});
+			} else {
+				console.log(`Post ${post.no} exists, skipping update.`);
 			}
 			// save images:
 			await saveFileToCache(`${baseMediaUrl}/${board}/${post.tim}${post.ext}`);
