@@ -43,7 +43,14 @@ function ToggleEmbed({ link }) {
 		<div>
 			{viewing ? (
 				<>
-					<div style={style} onClick={() => setViewing(false)}>
+					<div
+						style={style}
+						onClick={(e) => {
+							e.preventDefault();
+							e.stopPropagation();
+							setViewing(false);
+						}}
+					>
 						[Close Embed ({link})]
 					</div>
 					<iframe
@@ -56,7 +63,14 @@ function ToggleEmbed({ link }) {
 					></iframe>
 				</>
 			) : (
-				<div style={style} onClick={() => setViewing(true)}>
+				<div
+					style={style}
+					onClick={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						setViewing(true);
+					}}
+				>
 					[View Embed ({link})]
 				</div>
 			)}
@@ -67,7 +81,7 @@ function ToggleEmbed({ link }) {
 export function YouTubeLinks({ text }) {
 	const links = text
 		.replace(/(<wbr>|<\/wbr>)/g, '')
-		.match(/https?:\/\/(www\.)?(youtube\.com|youtu\.be)(.+?)(\s|<|$)/gi);
+		.match(/https?:\/\/([www|m]\.)?(youtube\.com|youtu\.be)(.+?)(\s|<|$)/gi);
 
 	return links
 		? links
