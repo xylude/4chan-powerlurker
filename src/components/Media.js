@@ -11,7 +11,6 @@ export function saveFileToCache(location) {
 		fs.stat(`./cache/images/${basename(location)}`, (err, stat) => {
 			if (err) {
 				try {
-					console.log('fetching from ', location);
 					// fetch and save locally:
 					const fStream = fs.createWriteStream(
 						`./cache/images/${basename(location)}`
@@ -106,7 +105,6 @@ function getFileUrl(location) {
 			if (err) {
 				resolve(location);
 			} else {
-				console.log('data for', basename(location), stat);
 				resolve(`../cache/images/${basename(location)}`);
 			}
 		});

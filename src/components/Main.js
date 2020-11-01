@@ -33,8 +33,6 @@ export default function () {
 		return () => window.removeEventListener('hashchange', handleHashChange);
 	}, []);
 
-	console.log('location change', location);
-
 	return (
 		<div
 			style={{

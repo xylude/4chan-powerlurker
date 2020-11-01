@@ -71,15 +71,12 @@ export function Thread({ board, threadNo, onExit }) {
 		for (const post of posts) {
 			// only update if post not exists:
 			if (!savedColl.findOne({ type: 'post', threadNo, 'post.no': post.no })) {
-				console.log('Inserting new post', post);
 				savedColl.insert({
 					type: 'post',
 					board,
 					threadNo,
 					post,
 				});
-			} else {
-				console.log(`Post ${post.no} exists, skipping update.`);
 			}
 			// save images:
 			await saveFileToCache(`${baseMediaUrl}/${board}/${post.tim}${post.ext}`);

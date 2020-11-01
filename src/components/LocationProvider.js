@@ -13,7 +13,6 @@ export function LocationProvider({ children }) {
 
 	function setLocation(loc) {
 		if (loc !== history.slice(-1)[0]) {
-			console.log(`pushing ${loc} on to history`);
 			history.push(loc);
 		}
 		_setLocation(loc);
@@ -28,7 +27,6 @@ export function LocationProvider({ children }) {
 					if (history.length > 1) {
 						history.pop();
 						const loc = history.slice(-1)[0];
-						console.log('going back to ', loc, history);
 						if (loc) {
 							setLocation(loc);
 						}
