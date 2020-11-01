@@ -112,17 +112,6 @@ export function Thread({ board, threadNo, onExit }) {
 						</span>
 					)}
 				</div>
-				<div
-					style={{
-						position: 'absolute',
-						top: 20,
-						right: 135,
-						cursor: 'pointer',
-					}}
-					onClick={onExit}
-				>
-					Back
-				</div>
 				{posts.map((post, i) => (
 					<Post
 						key={post.no}
