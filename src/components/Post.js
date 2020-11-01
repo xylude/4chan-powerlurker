@@ -154,7 +154,9 @@ export function Post({ post, board, parent, replies = [], onClick }) {
 						dangerouslySetInnerHTML={{
 							__html:
 								post.com &&
-								post.com.replace(/href="http(.+)"/g, /href="#link:http$1"/),
+								post.com
+									.replace(/href="http(.+)"/g, /href="#link:http$1"/)
+									.replace(/href="\//, `href="#link:/`),
 						}}
 					/>
 				</div>
@@ -163,9 +165,6 @@ export function Post({ post, board, parent, replies = [], onClick }) {
 				<div
 					style={{
 						fontSize: 12,
-						paddingBottom: 10,
-						marginBottom: 10,
-						borderBottom: '1px solid',
 					}}
 				>
 					<YouTubeLinks text={post.com} />

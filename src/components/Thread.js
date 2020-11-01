@@ -15,7 +15,7 @@ export function Thread({ board, threadNo, onExit }) {
 		!!savedColl.findOne({ type: 'thread', threadNo })
 	);
 
-	const [fetch, error] = usePromise(
+	const [fetch, error, loading] = usePromise(
 		() =>
 			request
 				.get(`${baseJsonUrl}/${board}/thread/${threadNo}.json`)
@@ -87,7 +87,9 @@ export function Thread({ board, threadNo, onExit }) {
 		setSaved(true);
 	}
 
-	return (
+	return loading ? (
+		<div>LOADING JUDGE THREDD...</div>
+	) : (
 		<>
 			<div
 				style={{

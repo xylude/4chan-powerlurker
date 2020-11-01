@@ -36,7 +36,7 @@ function NavItem({ children, onClick }) {
 }
 
 export function Navigation() {
-	const { setLocation } = useContext(LocationContext);
+	const { setLocation, back } = useContext(LocationContext);
 
 	return (
 		<div
@@ -51,6 +51,7 @@ export function Navigation() {
 				backgroundColor: '#000',
 			}}
 		>
+			<NavItem onClick={back}>Back</NavItem>
 			<NavItem onClick={() => setLocation('home')}>Home</NavItem>
 			<NavItem onClick={() => setLocation('saved')}>Saved Threads</NavItem>
 			<div>

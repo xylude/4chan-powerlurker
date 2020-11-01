@@ -81,7 +81,7 @@ function ToggleEmbed({ link }) {
 export function YouTubeLinks({ text }) {
 	const links = text
 		.replace(/(<wbr>|<\/wbr>)/g, '')
-		.match(/https?:\/\/([www|m]\.)?(youtube\.com|youtu\.be)(.+?)(\s|<|$)/gi);
+		.match(/https?:\/\/((w{3}|m)\.)?(youtube\.com|youtu\.be)(.+?)(\s|<|$)/gi);
 
 	return links
 		? links

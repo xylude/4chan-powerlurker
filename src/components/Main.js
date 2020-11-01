@@ -6,15 +6,24 @@ import { Navigation } from './Navigation';
 import { Saved } from './Saved';
 
 export default function () {
-	const { location } = useContext(LocationContext);
+	const { location, setLocation } = useContext(LocationContext);
 
 	useEffect(() => {
 		function handleHashChange() {
 			// console.log('hashchange', window.location.hash);
 			if (window.location.hash) {
 				if (window.location.hash.startsWith('#link')) {
-					//nw.Shell.openExternal
-					window.open(window.location.hash.replace('#link:', ''));
+					const loc = window.location.hash.replace('#link:', '');
+					if (loc.startsWith('/')) {
+						const localLocation = loc.split('/').filter((p) => p);
+						setLocation(
+							`board:${localLocation[0]}${
+								localLocation[1] ? `:${localLocation[1]}` : ''
+							}`
+						);
+					} else {
+						window.open(loc);
+					}
 					window.location.hash = '';
 				}
 			}
@@ -23,6 +32,8 @@ export default function () {
 
 		return () => window.removeEventListener('hashchange', handleHashChange);
 	}, []);
+
+	console.log('location change', location);
 
 	return (
 		<div
@@ -37,7 +48,7 @@ export default function () {
 			<Navigation title={'Home'} />
 			{location === 'home' && <BoardList />}
 			{location.startsWith('board:') && (
-				<Board board={location.split(':')[1]} />
+				<Board board={location.split(':')[1]} thread={location.split(':')[2]} />
 			)}
 			{location === 'saved' && <Saved />}
 		</div>

@@ -6,13 +6,14 @@ import { Post } from './Post';
 import { Pagination } from './Pagination';
 import { Thread } from './Thread';
 import { StorageContext } from './StorageProvider';
+import { LocationContext } from './LocationProvider';
 
-export function Board({ board }) {
+export function Board({ board, thread }) {
 	const { savedColl } = useContext(StorageContext);
+	const { setLocation } = useContext(LocationContext);
 
 	const [threads, setThreads] = useState([[]]);
 	const [page, setPage] = useState(0);
-	const [viewing, setViewing] = useState(null);
 	const [favorite, setFavorite] = useState(false);
 
 	const scrollRef = useRef(null);
@@ -21,7 +22,7 @@ export function Board({ board }) {
 		setPage(0);
 		setThreads([[]]);
 		setFavorite(false);
-		setViewing(null);
+		setLocation(`board:${board}`);
 	}
 
 	const [fetch, loading] = usePromise(
@@ -62,7 +63,7 @@ export function Board({ board }) {
 					position: 'absolute',
 					top: 20,
 					right: 20,
-					display: viewing ? 'none' : 'block',
+					display: thread ? 'none' : 'block',
 				}}
 			>
 				{favorite ? (
@@ -92,7 +93,7 @@ export function Board({ board }) {
 					top: 20,
 					right: 165,
 					cursor: 'pointer',
-					display: viewing ? 'none' : 'block',
+					display: thread ? 'none' : 'block',
 				}}
 				onClick={fetch}
 			>
@@ -102,7 +103,7 @@ export function Board({ board }) {
 				style={{
 					width: 1000,
 					margin: '0 auto',
-					display: viewing ? 'none' : 'block',
+					display: thread ? 'none' : 'block',
 					padding: '20px 0',
 				}}
 			>
@@ -115,7 +116,7 @@ export function Board({ board }) {
 				{threads[page].map((thread, i) => (
 					<Post
 						onClick={() => {
-							setViewing(thread.no);
+							setLocation(`board:${board}:${thread.no}`);
 						}}
 						key={thread.no}
 						idx={i}
@@ -130,11 +131,11 @@ export function Board({ board }) {
 					onPageChange={setPage}
 				/>
 			</div>
-			{viewing && (
+			{thread && (
 				<Thread
 					board={board}
-					threadNo={viewing}
-					onExit={() => setViewing(null)}
+					threadNo={thread}
+					onExit={() => setLocation(`board:${board}`)}
 				/>
 			)}
 		</div>
