@@ -81,7 +81,12 @@ export function Post({ post, board, parent, replies = [], onClick }) {
 					#{post.no}
 				</span>
 				<span
-					style={{ cursor: 'pointer' }}
+					style={{
+						display: 'inline-block',
+						paddingRight: 5,
+						marginRight: 5,
+						borderRight: '1px solid',
+					}}
 					onClick={(e) => {
 						e.preventDefault();
 						e.stopPropagation();
@@ -90,7 +95,19 @@ export function Post({ post, board, parent, replies = [], onClick }) {
 						);
 					}}
 				>
-					Open in Browser
+					Open in 4chan
+				</span>
+				<span
+					style={{ cursor: 'pointer' }}
+					onClick={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						nw.Shell.openExternal(
+							`https://archive.4plebs.org/${board}/thread/${parent}`
+						);
+					}}
+				>
+					Open in Archive
 				</span>
 			</div>
 			<div
