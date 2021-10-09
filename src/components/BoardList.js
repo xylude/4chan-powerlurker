@@ -3,30 +3,16 @@ import React, { useContext, useEffect, useState } from 'react';
 import { StorageContext } from './StorageProvider';
 import { usePromise } from './hooks/usePromise';
 import { baseJsonUrl } from '../constants';
-import set from '@babel/runtime/helpers/esm/set';
 import { LocationContext } from './LocationProvider';
+import { Link } from './Link';
 
 function htmlDecode(input) {
-	var doc = new DOMParser().parseFromString(input, 'text/html');
+	const doc = new DOMParser().parseFromString(input, 'text/html');
 	return doc.documentElement.textContent;
 }
 
-function Board({ board, onUpdate }) {
-	const { savedColl } = useContext(StorageContext);
+function Board({ board }) {
 	const { setLocation } = useContext(LocationContext);
-	const [favorite, setFavorite] = useState(
-		!!savedColl.findOne({ type: 'board', name: board.board })
-	);
-
-	function toggleSaved() {
-		if (savedColl.findOne({ type: 'board', name: board.board })) {
-			savedColl.findAndRemove({ type: 'board', name: board.board });
-		} else {
-			savedColl.insert({ type: 'board', name: board.board });
-		}
-		setFavorite((f) => !f);
-		onUpdate();
-	}
 
 	return (
 		<div
@@ -51,31 +37,26 @@ function Board({ board, onUpdate }) {
 }
 
 export function BoardList() {
-	const { boardsColl, savedColl } = useContext(StorageContext);
-	const [boardList, _setBoardList] = useState([]);
+	const { setItem, getItem } = useContext(StorageContext);
+	const { setLocation } = useContext(LocationContext);
+	const [boardList, setBoardList] = useState([]);
+	const [favorites, setFavorites] = useState([]);
+
+	useEffect(() => setFavorites(getItem('favoriteBoards')), []);
 
 	const [fetch] = usePromise(
 		() =>
 			request.get(`${baseJsonUrl}/boards.json`).then((response) => {
-				boardsColl.insert({
-					boards: response.body.boards,
-				});
+				setItem('boardsList', response.body.boards);
+				setBoardList(response.body.boards);
 			}),
 		[],
 		'BoardList'
 	);
 
-	function setBoardList(boards) {
-		_setBoardList(
-			boards.filter((board) =>
-				savedColl.findOne({ type: 'board', name: board.board })
-			)
-		);
-	}
-
 	useEffect(() => {
-		const boards = boardsColl.findOne({});
-		if (!boards) {
+		const boards = getItem('boards');
+		if (boards.length === 0) {
 			fetch();
 		} else {
 			setBoardList(boards.boards);
@@ -85,22 +66,62 @@ export function BoardList() {
 	return (
 		<div
 			style={{
-				width: '100%',
-				margin: '0 auto',
+				display: 'flex',
+				flexDirection: 'column',
 				height: '100%',
-				overflowY: 'scroll',
+				overflow: 'hidden',
+				position: 'absolute',
+				top: 0,
+				left: 0,
+				right: 0,
+				bottom: 0,
+				zIndex: 110,
 			}}
 		>
 			<div
 				style={{
-					width: 1000,
-					margin: '0 auto',
+					height: 50,
+					backgroundColor: '#000',
+					color: '#fff',
+					padding: 10,
+					display: 'flex',
 				}}
 			>
-				{boardList.length === 0 && "You don't have any favorite boards."}
-				{boardList.map((board) => (
-					<Board key={board.board} board={board} />
-				))}
+				<Link
+					onClick={() => {
+						setLocation('settings');
+					}}
+				>
+					Settings
+				</Link>
+			</div>
+			<div
+				style={{
+					width: '100%',
+					margin: '0 auto',
+					height: '100%',
+					overflowY: 'scroll',
+				}}
+			>
+				<div
+					style={{
+						width: 1000,
+						margin: '0 auto',
+					}}
+				>
+					<h2>Favorites</h2>
+					{boardList
+						.filter((board) => favorites.includes(board.board))
+						.map((board) => (
+							<Board key={board.board} board={board} />
+						))}
+					<h2>Other Boards</h2>
+					{boardList
+						.filter((board) => !favorites.includes(board.board))
+						.map((board) => (
+							<Board key={board.board} board={board} />
+						))}
+				</div>
 			</div>
 		</div>
 	);

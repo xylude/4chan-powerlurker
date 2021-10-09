@@ -1,8 +1,18 @@
 import React from 'react';
 import { Media, YouTubeLinks } from './Media';
 import { baseMediaUrl } from '../constants';
+import { Link } from './Link';
+import { Flag } from './Flag';
 
-export function Post({ post, board, parent, replies = [], onClick }) {
+export function Post({
+	post,
+	board,
+	parent = [],
+	onViewPostClick,
+	onIdClick,
+	onClick,
+	wrapperStyle,
+}) {
 	return (
 		<div
 			style={{
@@ -13,6 +23,7 @@ export function Post({ post, board, parent, replies = [], onClick }) {
 				position: 'relative',
 				cursor: onClick ? 'pointer' : 'default',
 				backgroundColor: '#2d2d2d',
+				...wrapperStyle,
 			}}
 			onClick={onClick}
 		>
@@ -56,6 +67,21 @@ export function Post({ post, board, parent, replies = [], onClick }) {
 						}}
 					>
 						<strong>{post.name}</strong>
+					</span>
+				)}
+				{post.id && (
+					<span
+						style={{
+							display: 'inline-block',
+							paddingRight: 5,
+							marginRight: 5,
+							borderRight: '1px solid',
+						}}
+						onClick={() => onIdClick && onIdClick(post.id)}
+					>
+						<strong>
+							{post.id} {post.postsById ? `(${post.postsById})` : ''}
+						</strong>
 					</span>
 				)}
 				{post.trip && (
@@ -109,6 +135,37 @@ export function Post({ post, board, parent, replies = [], onClick }) {
 				>
 					Open in Archive
 				</span>
+				{post.country && (
+					<span
+						style={{
+							display: 'inline-block',
+							position: 'absolute',
+							top: 0,
+							right: 0,
+							opacity: 0.1,
+						}}
+					>
+						<Flag
+							countryCode={post.country}
+							style={{
+								width: 75,
+							}}
+							title={post.country_name}
+							fallback={() => {
+								return (
+									<img
+										src="reddit.png"
+										title={post.country_name}
+										alt="meme flag"
+										style={{
+											width: 75,
+										}}
+									/>
+								);
+							}}
+						/>
+					</span>
+				)}
 			</div>
 			<div
 				key={post.no}
@@ -137,7 +194,7 @@ export function Post({ post, board, parent, replies = [], onClick }) {
 						flex: '1 1 auto',
 					}}
 				>
-					{replies.length > 0 && (
+					{post.replies.length > 0 && (
 						<div
 							style={{
 								fontSize: 12,
@@ -146,13 +203,17 @@ export function Post({ post, board, parent, replies = [], onClick }) {
 								borderBottom: '1px solid',
 							}}
 						>
-							{replies.map((r) => (
-								<a
-									style={{ display: 'inline-block', marginRight: 10 }}
-									href={`#p${r.no}`}
+							{post.replies.map((r) => (
+								<Link
+									style={{
+										display: 'inline-block',
+										marginRight: 10,
+									}}
+									key={r}
+									onClick={() => onViewPostClick(r)}
 								>
-									>>{r.no}
-								</a>
+									>>{r}
+								</Link>
 							))}
 						</div>
 					)}
@@ -173,7 +234,7 @@ export function Post({ post, board, parent, replies = [], onClick }) {
 								post.com &&
 								post.com
 									.replace(/href="http(.+)"/g, /href="#link:http$1"/)
-									.replace(/href="\//, `href="#link:/`),
+									.replace(/href="\//, `onClick="#link:/`),
 						}}
 					/>
 				</div>
@@ -187,14 +248,24 @@ export function Post({ post, board, parent, replies = [], onClick }) {
 					<YouTubeLinks text={post.com} />
 				</div>
 			)}
-			{post.replies ? (
+			{typeof post.replies === 'number' ? (
 				<div
 					style={{
 						fontSize: 12,
 						textAlign: 'right',
 					}}
 				>
-					{post.replies || 0} replies
+					{post.replies} replies
+				</div>
+			) : null}
+			{post.replies.length > 0 ? (
+				<div
+					style={{
+						fontSize: 12,
+						textAlign: 'right',
+					}}
+				>
+					{post.replies.length || 0} replies
 				</div>
 			) : null}
 		</div>

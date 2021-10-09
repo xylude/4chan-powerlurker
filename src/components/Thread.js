@@ -1,19 +1,28 @@
 import request from 'superagent/dist/superagent';
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { usePromise } from './hooks/usePromise';
 import { baseJsonUrl, baseMediaUrl } from '../constants';
 import { Post } from './Post';
 import { Modal } from './Modal';
-import { StorageContext } from './StorageProvider';
-import { saveFileToCache } from './Media';
+import { Link } from './Link';
 
 export function Thread({ board, threadNo, onExit }) {
-	const { savedColl } = useContext(StorageContext);
 	const [posts, setPosts] = useState([]);
-	const [viewingPost, setViewingPost] = useState(null);
-	const [saved, setSaved] = useState(
-		!!savedColl.findOne({ type: 'thread', threadNo })
-	);
+	const [viewingPosts, setViewingPosts] = useState([]);
+	const [highlightedId, setHighlightedId] = useState(null);
+	const [timeoutActive, setTimeoutActive] = useState(false);
+
+	const postMap = posts.reduce((postsAcc, post) => {
+		postsAcc[post.no] = {
+			...post,
+			replies: posts
+				.filter((p) => p.com && p.com.includes(`#p${post.no}`))
+				.map((p) => p.no),
+			postsById: posts.filter((p) => p.id === post.id).length,
+		};
+
+		return postsAcc;
+	}, {});
 
 	const [fetch, error, loading] = usePromise(
 		() =>
@@ -21,37 +30,22 @@ export function Thread({ board, threadNo, onExit }) {
 				.get(`${baseJsonUrl}/${board}/thread/${threadNo}.json`)
 				.then((response) => {
 					setPosts(response.body.posts);
-					if (saved) {
-						//update saved:
-						saveThread();
-					}
 				}),
-		[saved],
+		[],
 		'Thread'
 	);
 
-	useEffect(fetch, []);
-
-	useEffect(() => {
-		if (error) {
-			// try fill from db:
-			setPosts(
-				savedColl
-					.find({
-						type: 'post',
-						threadNo: threadNo,
-					})
-					.map((p) => p.post)
-			);
-		}
-	}, [error]);
-
 	useEffect(() => {
 		function handleHashChange() {
+			// console.log('hashchange', window.location.hash);
 			if (window.location.hash) {
+				console.log('hashchange', window.location.hash);
 				if (window.location.hash.startsWith('#p')) {
-					setViewingPost(parseInt(window.location.hash.replace('#p', ''), 10));
+					setViewingPosts([window.location.hash.replace('#p', '')]);
+				} else {
+					window.open(window.location.hash);
 				}
+				window.location.hash = '';
 			}
 		}
 		window.addEventListener('hashchange', handleHashChange);
@@ -59,85 +53,177 @@ export function Thread({ board, threadNo, onExit }) {
 		return () => window.removeEventListener('hashchange', handleHashChange);
 	}, []);
 
-	function unsaveThread() {
-		savedColl.removeWhere({ threadNo });
-		setSaved(false);
-	}
+	useEffect(fetch, []);
 
-	async function saveThread() {
-		if (!savedColl.findOne({ type: 'thread', threadNo })) {
-			savedColl.insert({ type: 'thread', threadNo });
+	const timedRefresh = useCallback(() => {
+		if (!timeoutActive) {
+			setTimeoutActive(true);
+			fetch();
+			setTimeout(() => setTimeoutActive(false), 5000);
 		}
-		for (const post of posts) {
-			// only update if post not exists:
-			if (!savedColl.findOne({ type: 'post', threadNo, 'post.no': post.no })) {
-				savedColl.insert({
-					type: 'post',
-					board,
-					threadNo,
-					post,
-				});
-			}
-			// save images:
-			await saveFileToCache(`${baseMediaUrl}/${board}/${post.tim}${post.ext}`);
-		}
-		setSaved(true);
-	}
+	}, []);
 
-	return loading ? (
-		<div>LOADING JUDGE THREDD...</div>
-	) : (
+	const handleSetViewingPost = useCallback(
+		(no) => setViewingPosts((viewingPosts) => viewingPosts.concat([no])),
+		[]
+	);
+
+	const handleSetHighlightedId = useCallback((id) => setHighlightedId(id), []);
+
+	return (
 		<>
 			<div
 				style={{
-					width: 1000,
-					margin: '0 auto',
+					display: 'flex',
+					flexDirection: 'column',
+					height: '100%',
+					overflow: 'hidden',
+					position: 'absolute',
+					top: 0,
+					left: 0,
+					right: 0,
+					bottom: 0,
+					zIndex: 110,
 				}}
 			>
 				<div
 					style={{
-						position: 'absolute',
-						top: 20,
-						right: 20,
-						cursor: 'pointer',
+						height: 50,
+						backgroundColor: '#000',
+						color: '#fff',
+						padding: 10,
+						display: 'flex',
 					}}
 				>
-					{saved ? (
-						<span style={{ cursor: 'pointer' }} onClick={unsaveThread}>
-							Unsave Thread
-						</span>
+					<div
+						style={{
+							flexGrow: 1,
+						}}
+					>
+						<Link
+							style={{ display: 'inline-block', marginRight: 10 }}
+							onClick={onExit}
+						>
+							Back
+						</Link>
+						{highlightedId && (
+							<Link
+								style={{ display: 'inline-block', marginRight: 10 }}
+								onClick={() => setHighlightedId(null)}
+							>
+								Unhighlight Posts
+							</Link>
+						)}
+					</div>
+					<div>
+						<Link
+							style={{
+								display: 'inline-block',
+								marginRight: 10,
+								color: timeoutActive ? '#f00' : 'inherit',
+							}}
+							onClick={timedRefresh}
+						>
+							Refresh
+						</Link>
+					</div>
+				</div>
+				<div
+					style={{
+						width: '100%',
+						margin: '0 auto',
+						height: '100%',
+						overflowY: 'scroll',
+					}}
+				>
+					{loading ? (
+						<div>
+							The thread didn't load, either your internet sucks or it got{' '}
+							<Link
+								onClick={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+									nw.Shell.openExternal(
+										`https://archive.4plebs.org/${board}/thread/${threadNo}`
+									);
+								}}
+							>
+								archived
+							</Link>
+							.
+						</div>
 					) : (
-						<span style={{ cursor: 'pointer' }} onClick={saveThread}>
-							Save Thread
-						</span>
+						<div
+							style={{
+								width: 1000,
+								margin: '0 auto',
+								padding: '20px 0',
+							}}
+						>
+							{Object.values(postMap).map((post, i) => (
+								<Post
+									key={post.no}
+									board={board}
+									post={post}
+									parent={threadNo}
+									onViewPostClick={handleSetViewingPost}
+									wrapperStyle={{
+										border:
+											highlightedId === post.id ? '1px solid #fff' : 'none',
+									}}
+									onIdClick={handleSetHighlightedId}
+								/>
+							))}
+						</div>
 					)}
 				</div>
-				{posts.map((post, i) => (
-					<Post
-						key={post.no}
-						board={board}
-						post={post}
-						replies={posts.filter(
-							(p) => p.com && p.com.includes(`#p${post.no}`)
-						)}
-						parent={threadNo}
-					/>
-				))}
 			</div>
-			{viewingPost && (
+			{viewingPosts.length > 0 && (
 				<Modal
 					style={{
 						width: '90%',
 					}}
 					onClickOutside={() => {
-						setViewingPost(null);
+						setViewingPosts([]);
 						window.location.hash = '';
 					}}
 				>
-					<Post
-						board={board}
-						post={posts.find((post) => post.no === viewingPost)}
-					/>
+					{viewingPosts.map((no, i) => (
+						<div key={`${no}:${i}`} style={{ position: 'relative' }}>
+							<Post
+								board={board}
+								post={postMap[no]}
+								parent={threadNo}
+								onViewPostClick={(no) =>
+									setViewingPosts((viewingPosts) => viewingPosts.concat([no]))
+								}
+							/>
+							{i >= 1 && (
+								<div
+									style={{
+										backgroundColor: '#000',
+										width: 20,
+										height: 20,
+										fontSize: 10,
+										padding: 4,
+										textAlign: 'center',
+										borderRadius: '50%',
+										position: 'absolute',
+										right: 0,
+										top: -5,
+										cursor: 'pointer',
+									}}
+									onClick={() => {
+										setViewingPosts((posts) =>
+											posts.filter((_, idx) => idx !== i)
+										);
+									}}
+								>
+									X
+								</div>
+							)}
+						</div>
+					))}
 				</Modal>
 			)}
 		</>

@@ -1,28 +1,31 @@
 import request from 'superagent/dist/superagent';
-import React, { useRef, useContext, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useContext } from 'react';
 import { usePromise } from './hooks/usePromise';
 import { baseJsonUrl } from '../constants';
 import { Post } from './Post';
 import { Pagination } from './Pagination';
 import { Thread } from './Thread';
-import { StorageContext } from './StorageProvider';
+import { Link } from './Link';
 import { LocationContext } from './LocationProvider';
+import { StorageContext } from './StorageProvider';
 
-export function Board({ board, thread }) {
-	const { savedColl } = useContext(StorageContext);
+export function Board({ board }) {
 	const { setLocation } = useContext(LocationContext);
+	const { setItem, getItem } = useContext(StorageContext);
 
 	const [threads, setThreads] = useState([[]]);
 	const [page, setPage] = useState(0);
-	const [favorite, setFavorite] = useState(false);
+	const [thread, setThread] = useState(null);
+	const [favorite, setFavorite] = useState(
+		getItem('favoriteBoards').includes(board)
+	);
 
 	const scrollRef = useRef(null);
 
 	function reset() {
 		setPage(0);
 		setThreads([[]]);
-		setFavorite(false);
-		setLocation(`board:${board}`);
+		setThread(null);
 	}
 
 	const [fetch, loading] = usePromise(
@@ -32,7 +35,6 @@ export function Board({ board, thread }) {
 				.get(`${baseJsonUrl}/${board}/catalog.json`)
 				.then((response) => {
 					setThreads(response.body.map((t) => t.threads));
-					setFavorite(!!savedColl.findOne({ type: 'board', name: board }));
 				});
 		},
 		[board],
@@ -49,95 +51,124 @@ export function Board({ board, thread }) {
 	}, [page]);
 
 	return (
-		<div
-			ref={scrollRef}
-			style={{
-				width: '100%',
-				margin: '0 auto',
-				height: '100%',
-				overflowY: 'scroll',
-			}}
-		>
+		<>
 			<div
 				style={{
+					display: 'flex',
+					flexDirection: 'column',
+					height: '100%',
+					overflow: 'hidden',
+					visibility: thread ? 'hidden' : 'visible',
 					position: 'absolute',
-					top: 20,
-					right: 20,
-					display: thread ? 'none' : 'block',
+					top: 0,
+					left: 0,
+					bottom: 0,
+					right: 0,
+					zIndex: 100,
 				}}
 			>
-				{favorite ? (
-					<span
-						onClick={() => {
-							savedColl.removeWhere({ type: 'board', name: board });
-							setFavorite(false);
+				<div
+					style={{
+						height: 50,
+						backgroundColor: '#000',
+						color: '#fff',
+						padding: 10,
+						display: 'flex',
+					}}
+				>
+					<div
+						style={{
+							flexGrow: 1,
+							display: 'flex',
 						}}
 					>
-						Unvavorite Board
-					</span>
-				) : (
-					<span
-						style={{ cursor: 'pointer' }}
-						onClick={() => {
-							savedColl.insert({ type: 'board', name: board });
-							setFavorite(true);
+						<Link
+							style={{ display: 'inline-block', marginLeft: 10 }}
+							onClick={() => setLocation('home')}
+						>
+							Back
+						</Link>
+						<div style={{ flexGrow: 1, textAlign: 'center' }}>/{board}/</div>
+					</div>
+					<div>
+						{favorite ? (
+							<Link
+								onClick={() => {
+									setItem('favoriteBoards', (boards) =>
+										boards.filter(board !== board)
+									);
+									setFavorite(false);
+								}}
+							>
+								Unfavorite
+							</Link>
+						) : (
+							<Link
+								onClick={() => {
+									setItem('favoriteBoards', (boards) => boards.concat([board]));
+									setFavorite(true);
+								}}
+							>
+								Favorite
+							</Link>
+						)}
+						<Link
+							style={{ display: 'inline-block', marginLeft: 10 }}
+							onClick={fetch}
+						>
+							Refresh
+						</Link>
+					</div>
+				</div>
+				<div
+					ref={scrollRef}
+					style={{
+						width: '100%',
+						margin: '0 auto',
+						height: '100%',
+						overflowY: 'scroll',
+					}}
+				>
+					<div
+						style={{
+							width: 1000,
+							margin: '0 auto',
+							padding: '20px 0',
 						}}
 					>
-						Favorite Board
-					</span>
-				)}
-			</div>
-			<div
-				style={{
-					position: 'absolute',
-					top: 20,
-					right: 165,
-					cursor: 'pointer',
-					display: thread ? 'none' : 'block',
-				}}
-				onClick={fetch}
-			>
-				Refresh
-			</div>
-			<div
-				style={{
-					width: 1000,
-					margin: '0 auto',
-					display: thread ? 'none' : 'block',
-					padding: '20px 0',
-				}}
-			>
-				<Pagination
-					page={page}
-					totalPages={threads.length}
-					onPageChange={setPage}
-				/>
-				{loading && 'Loading...'}
-				{threads[page].map((thread, i) => (
-					<Post
-						onClick={() => {
-							setLocation(`board:${board}:${thread.no}`);
-						}}
-						key={thread.no}
-						idx={i}
-						board={board}
-						post={thread}
-						parent={thread.no}
-					/>
-				))}
-				<Pagination
-					page={page}
-					totalPages={threads.length}
-					onPageChange={setPage}
-				/>
+						<Pagination
+							page={page}
+							totalPages={threads.length}
+							onPageChange={setPage}
+						/>
+						{loading && 'Loading...'}
+						{threads[page].map((thread, i) => (
+							<Post
+								onClick={() => setThread(thread.no)}
+								key={thread.no}
+								idx={i}
+								board={board}
+								post={thread}
+								parent={thread.no}
+							/>
+						))}
+						<Pagination
+							page={page}
+							totalPages={threads.length}
+							onPageChange={setPage}
+						/>
+					</div>
+				</div>
 			</div>
 			{thread && (
 				<Thread
 					board={board}
 					threadNo={thread}
-					onExit={() => setLocation(`board:${board}`)}
+					onExit={() => {
+						setThread(null);
+					}}
 				/>
 			)}
-		</div>
+		</>
 	);
 }

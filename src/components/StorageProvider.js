@@ -1,44 +1,56 @@
 import React, { useState, useEffect, createContext } from 'react';
-import loki from 'lokijs';
 
 export const StorageContext = createContext({
-	db: null,
+	setItem: () => {},
+	getItem: () => {},
 });
 
+const initialAppStore = {
+	initialized: true,
+	favoriteBoards: [],
+	boards: [],
+	mediaPath: './cache/images/',
+};
+
 export function StorageProvider({ children }) {
-	const [db, setDb] = useState(null);
+	const [storage, setStorage] = useState(
+		window.localStorage.getItem('appStore')
+			? JSON.parse(window.localStorage.getItem('appStore'))
+			: {}
+	);
 
 	useEffect(() => {
-		const _db = new loki('cache/caches.db', {
-			autoload: true,
-			autoloadCallback: () => {
-				if (!_db.getCollection('boards')) {
-					_db.addCollection('boards');
-					_db.addCollection('threads');
-					_db.addCollection('posts');
-					_db.addCollection('saved');
-					_db.addCollection('media');
-				}
-				setDb(_db);
-			},
-			autosave: true,
-			autosaveInterval: 4000,
-		});
+		if (!storage.initialized) {
+			window.localStorage.setItem('appStore', JSON.stringify(initialAppStore));
+			setStorage(initialAppStore);
+		}
 	}, []);
 
-	return db ? (
+	const setItem = (key, value) => {
+		const appStore = JSON.parse(window.localStorage.getItem('appStore'));
+
+		if (typeof value === 'function') {
+			appStore[key] = value(appStore[key]);
+		} else {
+			appStore[key] = value;
+		}
+
+		window.localStorage.setItem('appStore', JSON.stringify(appStore));
+		setStorage(appStore);
+	};
+	const getItem = (key) =>
+		JSON.parse(window.localStorage.getItem('appStore'))[key];
+
+	return storage.initialized ? (
 		<StorageContext.Provider
 			value={{
-				boardsColl: db.getCollection('boards'),
-				threadsColl: db.getCollection('threads'),
-				postsColl: db.getCollection('posts'),
-				savedColl: db.getCollection('saved'),
-				mediaColl: db.getCollection('media'),
+				setItem,
+				getItem,
 			}}
 		>
 			{children}
 		</StorageContext.Provider>
 	) : (
-		<div>Initializing caches...</div>
+		<div>Initializing...</div>
 	);
 }

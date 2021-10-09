@@ -6,7 +6,7 @@ export function Modal({ onClickOutside, style, children }) {
 		<div
 			style={{
 				position: 'absolute',
-				zIndex: 100,
+				zIndex: 10000,
 				top: 0,
 				bottom: 0,
 				left: 0,

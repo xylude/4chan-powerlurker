@@ -3,18 +3,16 @@ import { basename, extname } from 'path';
 import fs from 'fs';
 import { Modal } from './Modal';
 import { usePromise } from './hooks/usePromise';
-import { StorageContext } from './StorageProvider';
 import https from 'https';
+import { StorageContext } from './StorageProvider';
 
-export function saveFileToCache(location) {
+export function saveFileToCache(path, location) {
 	return new Promise((resolve, reject) => {
-		fs.stat(`./cache/images/${basename(location)}`, (err, stat) => {
+		fs.stat(`${path}/${basename(location)}`, (err, stat) => {
 			if (err) {
 				try {
 					// fetch and save locally:
-					const fStream = fs.createWriteStream(
-						`./cache/images/${basename(location)}`
-					);
+					const fStream = fs.createWriteStream(`${path}/${basename(location)}`);
 					https.get(location, (res) => {
 						res.pipe(fStream).on('finish', () => {
 							resolve();
@@ -125,7 +123,7 @@ function MediaComponent({ src, style, videoAttributes, onClick }) {
 }
 
 export function Media({ src, style }) {
-	const { savedColl } = useContext(StorageContext);
+	const { getItem } = useContext(StorageContext);
 	const [viewing, setViewing] = useState(false);
 	const [saved, setSaved] = useState(false);
 	const [location, setLocation] = useState(null);
@@ -174,7 +172,7 @@ export function Media({ src, style }) {
 						<span
 							onClick={() => {
 								if (!saved) {
-									saveFileToCache(src).then(() => {
+									saveFileToCache(getItem('mediaPath'), src).then(() => {
 										setSaved(true);
 									});
 								}

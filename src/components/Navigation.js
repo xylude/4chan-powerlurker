@@ -1,11 +1,7 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 import { LocationContext } from './LocationProvider';
-import { StorageContext } from './StorageProvider';
 
 function BoardSelect() {
-	const { boardsColl } = useContext(StorageContext);
-	const { setLocation, location } = useContext(LocationContext);
-
 	const actualLocation = location.startsWith('board:')
 		? location.split(':')[1]
 		: '';
