@@ -1,8 +1,5 @@
-import request from 'superagent/dist/superagent';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { StorageContext } from './StorageProvider';
-import { usePromise } from './hooks/usePromise';
-import { baseJsonUrl } from '../constants';
 import { LocationContext } from './LocationProvider';
 import { Link } from './Link';
 
@@ -11,6 +8,12 @@ export function Settings() {
 	const { setLocation } = useContext(LocationContext);
 
 	const [mediaPath, setMediaPath] = useState(getItem('mediaPath') || '');
+	const [hiddenPosts, setHiddenPosts] = useState(getItem('hiddenPosts'));
+
+	function clearHiddenPosts() {
+		setItem('hiddenPosts', []);
+		setHiddenPosts([]);
+	}
 
 	return (
 		<div
@@ -75,6 +78,10 @@ export function Settings() {
 								nwdirectory={''}
 							/>
 						</label>
+					</p>
+					<p>
+						<b>Hidden Posts: {hiddenPosts.length}</b>{' '}
+						<Link onClick={clearHiddenPosts}>Clear</Link>
 					</p>
 				</div>
 			</div>

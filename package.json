@@ -10,6 +10,9 @@
     "min_width": 1030,
     "min_height": 600
   },
+  "build": {
+    "nwVersion": "0.46.2"
+  },
   "scripts": {
     "setup": "mkdir cache && mkdir dist",
     "run-windows": "D:/nwjs/nw.exe .",

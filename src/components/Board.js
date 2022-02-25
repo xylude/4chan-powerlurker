@@ -16,9 +16,8 @@ export function Board({ board }) {
 	const [threads, setThreads] = useState([[]]);
 	const [page, setPage] = useState(0);
 	const [thread, setThread] = useState(null);
-	const [favorite, setFavorite] = useState(
-		getItem('favoriteBoards').includes(board)
-	);
+	const [hiddenPosts, setHiddenPosts] = useState(getItem('hiddenPosts'));
+	const [showHidden, setShowHidden] = useState(false);
 
 	const scrollRef = useRef(null);
 
@@ -26,6 +25,12 @@ export function Board({ board }) {
 		setPage(0);
 		setThreads([[]]);
 		setThread(null);
+	}
+
+	function hidePost(threadNo) {
+		const updated = [...new Set([...hiddenPosts, threadNo])];
+		setItem('hiddenPosts', updated);
+		setHiddenPosts(updated);
 	}
 
 	const [fetch, loading] = usePromise(
@@ -88,30 +93,24 @@ export function Board({ board }) {
 						>
 							Back
 						</Link>
-						<div style={{ flexGrow: 1, textAlign: 'center' }}>/{board}/</div>
-					</div>
-					<div>
-						{favorite ? (
+						{showHidden ? (
 							<Link
-								onClick={() => {
-									setItem('favoriteBoards', (boards) =>
-										boards.filter(board !== board)
-									);
-									setFavorite(false);
-								}}
+								style={{ display: 'inline-block', marginLeft: 10 }}
+								onClick={() => setShowHidden(false)}
 							>
-								Unfavorite
+								Hide Hidden
 							</Link>
 						) : (
 							<Link
-								onClick={() => {
-									setItem('favoriteBoards', (boards) => boards.concat([board]));
-									setFavorite(true);
-								}}
+								style={{ display: 'inline-block', marginLeft: 10 }}
+								onClick={() => setShowHidden(true)}
 							>
-								Favorite
+								Show Hidden
 							</Link>
 						)}
+						<div style={{ flexGrow: 1, textAlign: 'center' }}>/{board}/</div>
+					</div>
+					<div>
 						<Link
 							style={{ display: 'inline-block', marginLeft: 10 }}
 							onClick={fetch}
@@ -142,16 +141,21 @@ export function Board({ board }) {
 							onPageChange={setPage}
 						/>
 						{loading && 'Loading...'}
-						{threads[page].map((thread, i) => (
-							<Post
-								onClick={() => setThread(thread.no)}
-								key={thread.no}
-								idx={i}
-								board={board}
-								post={thread}
-								parent={thread.no}
-							/>
-						))}
+						{threads[page]
+							.filter((thread) =>
+								showHidden ? true : !hiddenPosts.includes(thread.no)
+							)
+							.map((thread, i) => (
+								<Post
+									onClick={() => setThread(thread.no)}
+									onHide={hidePost}
+									key={thread.no}
+									idx={i}
+									board={board}
+									post={thread}
+									parent={thread.no}
+								/>
+							))}
 						<Pagination
 							page={page}
 							totalPages={threads.length}

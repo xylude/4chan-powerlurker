@@ -11,8 +11,12 @@ function htmlDecode(input) {
 	return doc.documentElement.textContent;
 }
 
-function Board({ board }) {
+function Board({ board, onChange }) {
 	const { setLocation } = useContext(LocationContext);
+	const { setItem, getItem } = useContext(StorageContext);
+	const [favorite, setFavorite] = useState(
+		getItem('favoriteBoards').includes(board.board)
+	);
 
 	return (
 		<div
@@ -32,6 +36,40 @@ function Board({ board }) {
 				<strong>{board.title}</strong>
 			</p>
 			<p>{htmlDecode(board.meta_description)}</p>
+			<p
+				style={{
+					textAlign: 'right',
+					fontSize: 12,
+				}}
+			>
+				{favorite ? (
+					<Link
+						onClick={(e) => {
+							e.stopPropagation();
+							setItem('favoriteBoards', (boards) =>
+								boards.filter((currentBoard) => currentBoard !== board.board)
+							);
+							setFavorite(false);
+							onChange();
+						}}
+					>
+						Unfavorite
+					</Link>
+				) : (
+					<Link
+						onClick={(e) => {
+							e.stopPropagation();
+							setItem('favoriteBoards', (boards) =>
+								boards.concat([board.board])
+							);
+							setFavorite(true);
+							onChange();
+						}}
+					>
+						Favorite
+					</Link>
+				)}
+			</p>
 		</div>
 	);
 }
@@ -113,13 +151,21 @@ export function BoardList() {
 					{boardList
 						.filter((board) => favorites.includes(board.board))
 						.map((board) => (
-							<Board key={board.board} board={board} />
+							<Board
+								key={board.board}
+								board={board}
+								onChange={() => setFavorites(getItem('favoriteBoards'))}
+							/>
 						))}
 					<h2>Other Boards</h2>
 					{boardList
 						.filter((board) => !favorites.includes(board.board))
 						.map((board) => (
-							<Board key={board.board} board={board} />
+							<Board
+								key={board.board}
+								board={board}
+								onChange={() => setFavorites(getItem('favoriteBoards'))}
+							/>
 						))}
 				</div>
 			</div>

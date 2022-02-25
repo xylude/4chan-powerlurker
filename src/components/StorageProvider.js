@@ -10,6 +10,7 @@ const initialAppStore = {
 	favoriteBoards: [],
 	boards: [],
 	mediaPath: './cache/images/',
+	hiddenPosts: [],
 };
 
 export function StorageProvider({ children }) {

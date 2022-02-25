@@ -11,8 +11,24 @@ export function Post({
 	onViewPostClick,
 	onIdClick,
 	onClick,
+	onHide,
 	wrapperStyle,
 }) {
+	function getDigitsCount(number) {
+		const numberArr = number.toString().split('');
+		return (
+			numberArr.reverse().reduce((acc, curr, i, all) => {
+				if (curr === all[i - 1]) {
+					acc++;
+				}
+
+				return acc;
+			}, 0) + 1
+		);
+	}
+
+	const digitsCount = getDigitsCount(post.no);
+
 	return (
 		<div
 			style={{
@@ -102,6 +118,7 @@ export function Post({
 						paddingRight: 5,
 						marginRight: 5,
 						borderRight: '1px solid',
+						color: digitsCount > 1 ? '#fff' : 'inherit',
 					}}
 				>
 					#{post.no}
@@ -124,7 +141,13 @@ export function Post({
 					Open in 4chan
 				</span>
 				<span
-					style={{ cursor: 'pointer' }}
+					style={{
+						cursor: 'pointer',
+						display: 'inline-block',
+						paddingRight: 5,
+						marginRight: 5,
+						borderRight: '1px solid',
+					}}
 					onClick={(e) => {
 						e.preventDefault();
 						e.stopPropagation();
@@ -134,6 +157,16 @@ export function Post({
 					}}
 				>
 					Open in Archive
+				</span>
+				<span
+					style={{ cursor: 'pointer' }}
+					onClick={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						onHide(post.no);
+					}}
+				>
+					Hide Post
 				</span>
 				{post.country && (
 					<span

@@ -5,18 +5,30 @@ import { baseJsonUrl, baseMediaUrl } from '../constants';
 import { Post } from './Post';
 import { Modal } from './Modal';
 import { Link } from './Link';
+import { StorageContext } from './StorageProvider';
 
 export function Thread({ board, threadNo, onExit }) {
+	const { setItem, getItem } = useContext(StorageContext);
+
 	const [posts, setPosts] = useState([]);
 	const [viewingPosts, setViewingPosts] = useState([]);
 	const [highlightedId, setHighlightedId] = useState(null);
 	const [timeoutActive, setTimeoutActive] = useState(false);
+	const [hiddenPosts, setHiddenPosts] = useState(getItem('hiddenPosts'));
+	const [showHidden, setShowHidden] = useState(false);
+
+	function hidePost(threadNo) {
+		const updated = [...new Set([...hiddenPosts, threadNo])];
+		setItem('hiddenPosts', updated);
+		setHiddenPosts(updated);
+	}
 
 	const postMap = posts.reduce((postsAcc, post) => {
 		postsAcc[post.no] = {
 			...post,
 			replies: posts
 				.filter((p) => p.com && p.com.includes(`#p${post.no}`))
+				.filter((p) => (showHidden ? true : !hiddenPosts.includes(p.no)))
 				.map((p) => p.no),
 			postsById: posts.filter((p) => p.id === post.id).length,
 		};
@@ -106,6 +118,21 @@ export function Thread({ board, threadNo, onExit }) {
 						>
 							Back
 						</Link>
+						{showHidden ? (
+							<Link
+								style={{ display: 'inline-block', marginLeft: 10 }}
+								onClick={() => setShowHidden(false)}
+							>
+								Hide Hidden
+							</Link>
+						) : (
+							<Link
+								style={{ display: 'inline-block', marginLeft: 10 }}
+								onClick={() => setShowHidden(true)}
+							>
+								Show Hidden
+							</Link>
+						)}
 						{highlightedId && (
 							<Link
 								style={{ display: 'inline-block', marginRight: 10 }}
@@ -160,20 +187,25 @@ export function Thread({ board, threadNo, onExit }) {
 								padding: '20px 0',
 							}}
 						>
-							{Object.values(postMap).map((post, i) => (
-								<Post
-									key={post.no}
-									board={board}
-									post={post}
-									parent={threadNo}
-									onViewPostClick={handleSetViewingPost}
-									wrapperStyle={{
-										border:
-											highlightedId === post.id ? '1px solid #fff' : 'none',
-									}}
-									onIdClick={handleSetHighlightedId}
-								/>
-							))}
+							{Object.values(postMap)
+								.filter((post) =>
+									showHidden ? true : !hiddenPosts.includes(post.no)
+								)
+								.map((post, i) => (
+									<Post
+										key={post.no}
+										board={board}
+										post={post}
+										parent={threadNo}
+										onViewPostClick={handleSetViewingPost}
+										onHide={hidePost}
+										wrapperStyle={{
+											border:
+												highlightedId === post.id ? '1px solid #fff' : 'none',
+										}}
+										onIdClick={handleSetHighlightedId}
+									/>
+								))}
 						</div>
 					)}
 				</div>
