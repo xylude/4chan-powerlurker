@@ -15,16 +15,19 @@ export function Post({
 	wrapperStyle,
 }) {
 	function getDigitsCount(number) {
-		const numberArr = number.toString().split('');
-		return (
-			numberArr.reverse().reduce((acc, curr, i, all) => {
-				if (curr === all[i - 1]) {
-					acc++;
-				}
+		const numberArr = number.toString().split('').reverse();
 
-				return acc;
-			}, 0) + 1
-		);
+		let digitsCount = 0;
+
+		for (const num of numberArr) {
+			if (num === numberArr[0]) {
+				digitsCount++;
+			} else {
+				break;
+			}
+		}
+
+		return digitsCount;
 	}
 
 	const digitsCount = getDigitsCount(post.no);
@@ -117,8 +120,8 @@ export function Post({
 						display: 'inline-block',
 						paddingRight: 5,
 						marginRight: 5,
-						borderRight: '1px solid',
-						color: digitsCount > 1 ? '#fff' : 'inherit',
+						borderRight: '1px solid rgb(206, 202, 195)',
+						color: digitsCount > 1 ? '#f55' : 'inherit',
 					}}
 				>
 					#{post.no}
