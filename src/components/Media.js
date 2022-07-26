@@ -28,8 +28,7 @@ export function saveFileToCache(path, location) {
 	});
 }
 
-function ToggleEmbed({ link }) {
-	const [viewing, setViewing] = useState(false);
+function OpenLink({ link }) {
 	const style = {
 		padding: '10px 5px',
 		cursor: 'pointer',
@@ -38,62 +37,31 @@ function ToggleEmbed({ link }) {
 
 	return (
 		<div>
-			{viewing ? (
-				<>
-					<div
-						style={style}
-						onClick={(e) => {
-							e.preventDefault();
-							e.stopPropagation();
-							setViewing(false);
-						}}
-					>
-						[Close Embed ({link})]
-					</div>
-					<iframe
-						width="560"
-						height="315"
-						src={link}
-						frameBorder="0"
-						allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-						allowFullScreen
-					></iframe>
-				</>
-			) : (
-				<div
-					style={style}
-					onClick={(e) => {
-						e.preventDefault();
-						e.stopPropagation();
-						setViewing(true);
-					}}
-				>
-					[View Embed ({link})]
-				</div>
-			)}
+			<div
+				style={style}
+				onClick={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					nw.Window.open(link);
+				}}
+			>
+				[View Link ({link})]
+			</div>
 		</div>
 	);
 }
 
-export function YouTubeLinks({ text }) {
+export function ClickableLinks({ text }) {
 	const links = text
 		.replace(/(<wbr>|<\/wbr>)/g, '')
-		.match(/https?:\/\/((w{3}|m)\.)?(youtube\.com|youtu\.be)(.+?)(\s|<|$)/gi);
+		.match(
+			/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi
+		);
 
 	return links
 		? links
 				.map((link) => link.replace('<', '').trim())
-				.map((link) => {
-					const url = new URL(link);
-					const search = new URLSearchParams(url.search);
-
-					const vid = search.has('v')
-						? search.get('v')
-						: url.pathname.split('/').filter((p) => p)[0];
-
-					return `https://www.youtube.com/embed/${vid}`;
-				})
-				.map((link, i) => <ToggleEmbed key={i} link={link} />)
+				.map((link, i) => <OpenLink key={i} link={link} />)
 		: null;
 }
 
@@ -122,28 +90,19 @@ function MediaComponent({ src, style, videoAttributes, onClick }) {
 	}
 }
 
-export function Media({ src, style }) {
+export function Media({ src, thumbSrc, style }) {
 	const { getItem } = useContext(StorageContext);
 	const [viewing, setViewing] = useState(false);
 	const [saved, setSaved] = useState(false);
-	const [location, setLocation] = useState(null);
 
-	const [getUrl, loading] = usePromise(
-		() => getFileUrl(src).then(setLocation),
-		[],
-		'Media'
-	);
-
-	useEffect(getUrl, []);
-
-	return loading || !location ? null : (
+	return (
 		<>
 			<MediaComponent
 				style={{
 					cursor: 'pointer',
 					...style,
 				}}
-				src={location}
+				src={thumbSrc}
 				onClick={(e) => {
 					e.preventDefault();
 					e.stopPropagation();
@@ -162,7 +121,7 @@ export function Media({ src, style }) {
 							controls: 'true',
 						}}
 						style={{ width: '100%' }}
-						src={location}
+						src={src}
 					/>
 					<div
 						style={{

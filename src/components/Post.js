@@ -1,5 +1,5 @@
 import React from 'react';
-import { Media, YouTubeLinks } from './Media';
+import { Media, ClickableLinks } from './Media';
 import { baseMediaUrl } from '../constants';
 import { Link } from './Link';
 import { Flag } from './Flag';
@@ -133,7 +133,7 @@ export function Post({
 					onClick={(e) => {
 						e.preventDefault();
 						e.stopPropagation();
-						nw.Shell.openExternal(
+						nw.Window.open(
 							`https://boards.4channel.org/${board}/thread/${parent}#p${post.no}`
 						);
 					}}
@@ -218,6 +218,7 @@ export function Post({
 							style={{
 								width: '100%',
 							}}
+							thumbSrc={`${baseMediaUrl}/${board}/${post.tim}s.jpg`}
 							src={`${baseMediaUrl}/${board}/${post.tim}${post.ext}`}
 						/>
 					</div>
@@ -278,7 +279,7 @@ export function Post({
 						fontSize: 12,
 					}}
 				>
-					<YouTubeLinks text={post.com} />
+					<ClickableLinks text={post.com} />
 				</div>
 			)}
 			{typeof post.replies === 'number' ? (
