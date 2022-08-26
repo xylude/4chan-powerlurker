@@ -36,6 +36,8 @@ function OpenLink({ link }) {
 		textDecoration: 'underline',
 	};
 
+	const { getItem } = useContext(StorageContext);
+
 	return (
 		<div>
 			<div
