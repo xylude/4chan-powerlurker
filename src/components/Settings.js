@@ -9,6 +9,9 @@ export function Settings() {
 
 	const [mediaPath, setMediaPath] = useState(getItem('mediaPath') || '');
 	const [hiddenPosts, setHiddenPosts] = useState(getItem('hiddenPosts'));
+	const [defaultOpenCommand, setDefaultOpenCommand] = useState(
+		getItem('defaultOpenCommand')
+	);
 
 	function clearHiddenPosts() {
 		setItem('hiddenPosts', []);
@@ -82,6 +85,26 @@ export function Settings() {
 					<p>
 						<b>Hidden Posts: {hiddenPosts.length}</b>{' '}
 						<Link onClick={clearHiddenPosts}>Clear</Link>
+					</p>
+					<p>
+						<b>Default Open Command (for browser)</b>{' '}
+						<input
+							type="text"
+							value={defaultOpenCommand}
+							onChange={(e) => {
+								setDefaultOpenCommand(e.target.value);
+								setItem('defaultOpenCommand', e.target.value);
+							}}
+						/>
+					</p>
+					<p>
+						<button
+							onClick={() => {
+								nw.App.clearCache();
+							}}
+						>
+							Clear Cache
+						</button>
 					</p>
 				</div>
 			</div>

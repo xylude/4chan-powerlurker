@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Media, ClickableLinks } from './Media';
 import { baseMediaUrl } from '../constants';
 import { Link } from './Link';
 import { Flag } from './Flag';
+import { StorageContext } from './StorageProvider';
+import { exec } from 'child_process';
 
 export function Post({
 	post,
@@ -31,6 +33,8 @@ export function Post({
 	}
 
 	const digitsCount = getDigitsCount(post.no);
+
+	const { getItem } = useContext(StorageContext);
 
 	return (
 		<div
@@ -136,9 +140,13 @@ export function Post({
 					onClick={(e) => {
 						e.preventDefault();
 						e.stopPropagation();
-						nw.Window.open(
-							`https://boards.4channel.org/${board}/thread/${parent}#p${post.no}`
-						);
+						const url = `https://boards.4channel.org/${board}/thread/${parent}#p${post.no}`;
+
+						if (getItem('defaultOpenCommand')) {
+							exec(getItem('defaultOpenCommand').replace('$URL', url));
+						} else {
+							nw.Window.open(url);
+						}
 					}}
 				>
 					Open in 4chan
@@ -154,9 +162,12 @@ export function Post({
 					onClick={(e) => {
 						e.preventDefault();
 						e.stopPropagation();
-						nw.Shell.openExternal(
-							`https://archive.4plebs.org/${board}/thread/${parent}`
-						);
+						const url = `https://archive.4plebs.org/${board}/thread/${parent}`;
+						if (getItem('defaultOpenCommand')) {
+							exec(getItem('defaultOpenCommand').replace('$URL', url));
+						} else {
+							nw.Window.open(url);
+						}
 					}}
 				>
 					Open in Archive

@@ -5,6 +5,7 @@ import { Modal } from './Modal';
 import { usePromise } from './hooks/usePromise';
 import https from 'https';
 import { StorageContext } from './StorageProvider';
+import { exec } from 'child_process';
 
 export function saveFileToCache(path, location) {
 	return new Promise((resolve, reject) => {
@@ -42,7 +43,11 @@ function OpenLink({ link }) {
 				onClick={(e) => {
 					e.preventDefault();
 					e.stopPropagation();
-					nw.Window.open(link);
+					if (getItem('defaultOpenCommand')) {
+						exec(getItem('defaultOpenCommand').replace('$URL', link));
+					} else {
+						nw.Window.open(link);
+					}
 				}}
 			>
 				[View Link ({link})]
@@ -59,7 +64,7 @@ export function ClickableLinks({ text }) {
 		);
 
 	return links
-		? links
+		? [...new Set([...links])]
 				.map((link) => link.replace('<', '').trim())
 				.map((link, i) => <OpenLink key={i} link={link} />)
 		: null;
