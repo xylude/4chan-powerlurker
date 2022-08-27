@@ -187,6 +187,19 @@ export function Thread({ board, threadNo, onExit }) {
 								padding: '20px 0',
 							}}
 						>
+							{posts.length > 30 && postMap[posts[0].no].postsById === 1 ? (
+								<div
+									style={{
+										margin: '20px 0',
+										fontWeight: 900,
+										color: '#fff',
+										fontSize: 20,
+										textAlign: 'center',
+									}}
+								>
+									1pbtid Thread
+								</div>
+							) : null}
 							{Object.values(postMap)
 								.filter((post) =>
 									showHidden ? true : !hiddenPosts.includes(post.no)
