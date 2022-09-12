@@ -173,7 +173,13 @@ export function Post({
 					Open in Archive
 				</span>
 				<span
-					style={{ cursor: 'pointer' }}
+					style={{
+						cursor: 'pointer',
+						display: 'inline-block',
+						paddingRight: 5,
+						marginRight: 5,
+						borderRight: '1px solid',
+					}}
 					onClick={(e) => {
 						e.preventDefault();
 						e.stopPropagation();
@@ -182,6 +188,7 @@ export function Post({
 				>
 					Hide Post
 				</span>
+				<span>{post.now}</span>
 				{post.country && (
 					<span
 						style={{
