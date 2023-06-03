@@ -6,6 +6,7 @@ import { Post } from './Post';
 import { Modal } from './Modal';
 import { Link } from './Link';
 import { StorageContext } from './StorageProvider';
+import { Media } from './Media';
 
 export function Thread({ board, threadNo, onExit }) {
 	const { setItem, getItem } = useContext(StorageContext);
@@ -16,6 +17,7 @@ export function Thread({ board, threadNo, onExit }) {
 	const [timeoutActive, setTimeoutActive] = useState(false);
 	const [hiddenPosts, setHiddenPosts] = useState(getItem('hiddenPosts'));
 	const [showHidden, setShowHidden] = useState(false);
+	const [showOnlyMedia, setShowOnlyMedia] = useState(false);
 
 	function hidePost(threadNo) {
 		const updated = [...new Set([...hiddenPosts, threadNo])];
@@ -200,25 +202,61 @@ export function Thread({ board, threadNo, onExit }) {
 									1pbtid Thread
 								</div>
 							) : null}
-							{Object.values(postMap)
-								.filter((post) =>
-									showHidden ? true : !hiddenPosts.includes(post.no)
+							<div>
+								<label>
+									<input type='checkbox' onChange={() => setShowOnlyMedia(!showOnlyMedia)} checked={showOnlyMedia} /> Only show media
+								</label>
+							</div>
+							{
+								showOnlyMedia ? (
+									<div>
+										{
+											Object.values(postMap)
+												.filter(post => post.filename)
+												.map((post) => {
+													return (
+														<div
+															style={{
+																width: 200,
+																display: 'inline-block',
+																marginRight: 20,
+															}}
+															key={post.no}
+														>
+															<Media
+																style={{
+																	width: '100%',
+																}}
+																thumbSrc={`${baseMediaUrl}/${board}/${post.tim}s.jpg`}
+																src={`${baseMediaUrl}/${board}/${post.tim}${post.ext}`}
+															/>
+														</div>
+													)
+												})
+										}
+									</div>
+								) : (
+									Object.values(postMap)
+										.filter((post) =>
+											showHidden ? true : !hiddenPosts.includes(post.no)
+										)
+										.map((post, i) => (
+											<Post
+												key={post.no}
+												board={board}
+												post={post}
+												parent={threadNo}
+												onViewPostClick={handleSetViewingPost}
+												onHide={hidePost}
+												wrapperStyle={{
+													border:
+														highlightedId === post.id ? '1px solid #fff' : 'none',
+												}}
+												onIdClick={handleSetHighlightedId}
+											/>
+										))
 								)
-								.map((post, i) => (
-									<Post
-										key={post.no}
-										board={board}
-										post={post}
-										parent={threadNo}
-										onViewPostClick={handleSetViewingPost}
-										onHide={hidePost}
-										wrapperStyle={{
-											border:
-												highlightedId === post.id ? '1px solid #fff' : 'none',
-										}}
-										onIdClick={handleSetHighlightedId}
-									/>
-								))}
+							}
 						</div>
 					)}
 				</div>

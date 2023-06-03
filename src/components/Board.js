@@ -8,18 +8,39 @@ import { Thread } from './Thread';
 import { Link } from './Link';
 import { LocationContext } from './LocationProvider';
 import { StorageContext } from './StorageProvider';
+import { chunkArray } from '../util/helpers'
 
 export function Board({ board }) {
 	const { setLocation } = useContext(LocationContext);
 	const { setItem, getItem } = useContext(StorageContext);
 
-	const [threads, setThreads] = useState([[]]);
+	const [_threads, _setThreads] = useState([[]]);
 	const [page, setPage] = useState(0);
 	const [thread, setThread] = useState(null);
 	const [hiddenPosts, setHiddenPosts] = useState(getItem('hiddenPosts'));
 	const [showHidden, setShowHidden] = useState(false);
+	const [query, setQuery] = useState('');
+	const [threads, setThreads] = useState([[]]);
 
 	const scrollRef = useRef(null);
+
+	useEffect(() => {
+		const threads = query ? chunkArray([].concat(..._threads).filter(thread => {
+			if (query) {
+				query = query.toLowerCase();
+				const { sub, com } = thread;
+				if ((sub && sub.toLowerCase().includes(query)) || (com && com.toLowerCase().includes(query))) {
+					return true;
+				}
+				return false;
+			}
+
+			return true;
+		}), 14) : _threads;
+
+		setPage(0);
+		setThreads(threads.length > 0 ? threads : [[]]);
+	}, [query, _threads])
 
 	function reset() {
 		setPage(0);
@@ -39,7 +60,7 @@ export function Board({ board }) {
 			return request
 				.get(`${baseJsonUrl}/${board}/catalog.json`)
 				.then((response) => {
-					setThreads(response.body.map((t) => t.threads));
+					_setThreads(response.body.map((t) => t.threads));
 				});
 		},
 		[board],
@@ -135,6 +156,9 @@ export function Board({ board }) {
 							padding: '20px 0',
 						}}
 					>
+						<input placeholder='Search Threads' type='text' value={query} onChange={e => {
+							setQuery(e.target.value);
+						}} />
 						<Pagination
 							page={page}
 							totalPages={threads.length}
