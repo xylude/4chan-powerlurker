@@ -27,12 +27,19 @@ export function Board({ board }) {
 	useEffect(() => {
 		const threads = query ? chunkArray([].concat(..._threads).filter(thread => {
 			if (query) {
-				query = query.toLowerCase();
 				const { sub, com } = thread;
-				if ((sub && sub.toLowerCase().includes(query)) || (com && com.toLowerCase().includes(query))) {
-					return true;
+				let hit = false;
+				try {
+					if (sub) {
+						hit = sub.match(new RegExp(query, "ig"));
+					}
+					if (com && !hit) {
+						hit = com.match(com.match(new RegExp(query, "ig")));
+					}
+				} catch (e) {
+					// do nothing, this is so we can have invalid regex
 				}
-				return false;
+				return hit;
 			}
 
 			return true;
@@ -156,7 +163,7 @@ export function Board({ board }) {
 							padding: '20px 0',
 						}}
 					>
-						<input placeholder='Search Threads' type='text' value={query} onChange={e => {
+						<input placeholder='Search Threads (regex)' type='text' value={query} onChange={e => {
 							setQuery(e.target.value);
 						}} />
 						<Pagination
